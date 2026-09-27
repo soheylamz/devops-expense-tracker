@@ -174,4 +174,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DevOps-Pipeline-Gruppe6 -Dsonar.projectName='DevOps-Pipeline-Gruppe6'
+        run: >-
+          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.projectKey=DevOps-Pipeline-Gruppe6
+          -Dsonar.projectName='DevOps-Pipeline-Gruppe6'
+          -Dsonar.host.url=$SONAR_HOST_URL
+          -Dsonar.token=$SONAR_TOKEN
