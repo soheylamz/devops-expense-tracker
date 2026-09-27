@@ -139,8 +139,8 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.deploy.yml ps
 
   sonarqube:
-    name: Code Quality (SonarCloud)
-    runs-on: ubuntu-latest
+    name: Code Quality (SonarQube, lokal)
+    runs-on: self-hosted
     needs: deploy
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
