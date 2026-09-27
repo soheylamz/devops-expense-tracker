@@ -138,6 +138,21 @@ jobs:
         run: |
           docker compose -f docker-compose.yml -f docker-compose.deploy.yml ps
 
+      - name: Alte Images aufraeumen (lokal, letzte 5 behalten)
+        run: |
+          $imageRepo = $env:APP_IMAGE.Substring(0, $env:APP_IMAGE.LastIndexOf(':'))
+          $sorted = docker images $imageRepo -q | Select-Object -Unique | ForEach-Object {
+            [PSCustomObject]@{ Id = $_; Created = (docker inspect -f "{{.Created}}" $_) }
+          } | Sort-Object Created -Descending
+
+          $obsolete = $sorted | Select-Object -Skip 5 | Select-Object -ExpandProperty Id
+          if ($obsolete) {
+            docker rmi $obsolete -f
+            Write-Host "$($obsolete.Count) altes Image(s) entfernt."
+          } else {
+            Write-Host "Weniger als 5 Images vorhanden, nichts zu entfernen."
+          }
+
   sonarqube:
     name: Code Quality (SonarQube, lokal)
     runs-on: self-hosted
