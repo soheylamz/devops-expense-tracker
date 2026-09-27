@@ -88,7 +88,7 @@ jobs:
   deploy:
     name: Deploy (lokaler PC)
     runs-on: self-hosted
-    needs: image
+    needs: [image, sonarqube]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
@@ -156,7 +156,6 @@ jobs:
   sonarqube:
     name: Code Quality (SonarQube, lokal)
     runs-on: self-hosted
-    needs: deploy
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -170,6 +169,6 @@ jobs:
           distribution: "zulu"
 
       - name: Build und SonarQube-Analyse
-        run: .\mvnw.cmd clean verify sonar:sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.token=$env:SONAR_TOKEN" "-Dsonar.projectKey=DevOps-Pipeline-Gruppe6" "-Dsonar.projectName=DevOps-Pipeline-Gruppe6"
+        run: .\mvnw.cmd clean verify sonar:sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.token=$env:SONAR_TOKEN" "-Dsonar.projectKey=DevOps-Pipeline-Gruppe6" "-Dsonar.projectName=DevOps-Pipeline-Gruppe6" "-Dsonar.qualitygate.wait=true"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
