@@ -147,8 +147,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - name: JDK 21 einrichten
         uses: actions/setup-java@v5
@@ -156,27 +154,7 @@ jobs:
           java-version: "21"
           distribution: "zulu"
 
-      - name: SonarQube-Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Maven-Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Build und Analyse
+      - name: Build und SonarQube-Analyse
+        run: .\mvnw.cmd clean verify sonar:sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.token=$env:SONAR_TOKEN" "-Dsonar.projectKey=DevOps-Pipeline-Gruppe6" "-Dsonar.projectName=DevOps-Pipeline-Gruppe6"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: >-
-          ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Dsonar.projectKey=DevOps-Pipeline-Gruppe6
-          -Dsonar.projectName='DevOps-Pipeline-Gruppe6'
-          -Dsonar.host.url=$SONAR_HOST_URL
-          -Dsonar.token=$SONAR_TOKEN
