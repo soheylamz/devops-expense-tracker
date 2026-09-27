@@ -1,88 +1,88 @@
 <!doctype html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AusgabenTracker</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <main>
-        <h1>AusgabenTracker</h1>
+      <h1>Ausgaben-Tracker</h1>
 
-        <section class="card">
-            <h2 id="form-title">Neue Ausgabe</h2>
-            <form id="expense-form">
-                <input type="hidden" id="expense-id">
-                <label>
-                    Beschreibung
-                    <input type="text" id="description" required maxlength="255">
-                </label>
-                <label>
-                    Betrag (€)
-                    <input type="number" id="amount" step="0.01" min="0" required>
-                </label>
-                <label>
-                    Kategorie
-                    <select id="category" required>
-                        <option value="WOHNEN">Wohnen</option>
-                        <option value="LEBENSMITTEL">Lebensmittel</option>
-                        <option value="TRANSPORT">Transport</option>
-                        <option value="FREIZEIT">Freizeit</option>
-                        <option value="GESUNDHEIT">Gesundheit</option>
-                        <option value="SONSTIGES">Sonstiges</option>
-                    </select>
-                </label>
-                <label>
-                    Datum
-                    <input type="date" id="date" required>
-                </label>
-                <div class="form-actions">
-                    <button type="submit" id="submit-button">Anlegen</button>
-                    <button type="button" id="cancel-button" hidden>Abbrechen</button>
-                </div>
-            </form>
-            <p id="error-message" class="error" hidden></p>
-        </section>
+      <section class="card">
+        <h2 id="form-title">Neue Ausgabe</h2>
+        <form id="expense-form">
+          <input type="hidden" id="expense-id" />
+          <label>
+            Beschreibung
+            <input type="text" id="description" required maxlength="255" />
+          </label>
+          <label>
+            Betrag (€)
+            <input type="number" id="amount" step="0.01" min="0" required />
+          </label>
+          <label>
+            Kategorie
+            <select id="category" required>
+              <option value="WOHNEN">Wohnen</option>
+              <option value="LEBENSMITTEL">Lebensmittel</option>
+              <option value="TRANSPORT">Transport</option>
+              <option value="FREIZEIT">Freizeit</option>
+              <option value="GESUNDHEIT">Gesundheit</option>
+              <option value="SONSTIGES">Sonstiges</option>
+            </select>
+          </label>
+          <label>
+            Datum
+            <input type="date" id="date" required />
+          </label>
+          <div class="form-actions">
+            <button type="submit" id="submit-button">Anlegen</button>
+            <button type="button" id="cancel-button" hidden>Abbrechen</button>
+          </div>
+        </form>
+        <p id="error-message" class="error" hidden></p>
+      </section>
 
-        <section class="card">
-            <h2>Auswertung</h2>
-            <p class="total">Gesamt: <strong id="summary-total">0,00 €</strong></p>
-            <ul id="summary-by-category" class="summary-list"></ul>
-        </section>
+      <section class="card">
+        <h2>Auswertung</h2>
+        <p class="total">Gesamt: <strong id="summary-total">0,00 €</strong></p>
+        <ul id="summary-by-category" class="summary-list"></ul>
+      </section>
 
-        <section class="card">
-            <div class="table-header">
-                <h2>Ausgaben</h2>
-                <label class="filter">
-                    Filter
-                    <select id="category-filter">
-                        <option value="">Alle Kategorien</option>
-                        <option value="WOHNEN">Wohnen</option>
-                        <option value="LEBENSMITTEL">Lebensmittel</option>
-                        <option value="TRANSPORT">Transport</option>
-                        <option value="FREIZEIT">Freizeit</option>
-                        <option value="GESUNDHEIT">Gesundheit</option>
-                        <option value="SONSTIGES">Sonstiges</option>
-                    </select>
-                </label>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Datum</th>
-                        <th>Beschreibung</th>
-                        <th>Kategorie</th>
-                        <th>Betrag</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="expense-rows"></tbody>
-            </table>
-            <p id="empty-message" hidden>Noch keine Ausgaben erfasst.</p>
-        </section>
+      <section class="card">
+        <div class="table-header">
+          <h2>Ausgaben</h2>
+          <label class="filter">
+            Filter
+            <select id="category-filter">
+              <option value="">Alle Kategorien</option>
+              <option value="WOHNEN">Wohnen</option>
+              <option value="LEBENSMITTEL">Lebensmittel</option>
+              <option value="TRANSPORT">Transport</option>
+              <option value="FREIZEIT">Freizeit</option>
+              <option value="GESUNDHEIT">Gesundheit</option>
+              <option value="SONSTIGES">Sonstiges</option>
+            </select>
+          </label>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Beschreibung</th>
+              <th>Kategorie</th>
+              <th>Betrag</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expense-rows"></tbody>
+        </table>
+        <p id="empty-message" hidden>Noch keine Ausgaben erfasst.</p>
+      </section>
     </main>
 
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
