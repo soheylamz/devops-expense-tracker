@@ -13,8 +13,4 @@ public class HelloController {
     public String sayHello() {
         return "Dev22Ops Pipeline läuft erfolgreich!";
     }
-    private void demoFehler() {
-        String wert = null;
-        System.out.println(wert.length());
-    }
 }
