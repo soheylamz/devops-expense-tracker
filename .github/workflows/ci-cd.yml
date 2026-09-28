@@ -50,7 +50,7 @@ jobs:
     name: Docker Image
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
@@ -88,8 +88,8 @@ jobs:
   deploy:
     name: Deploy (lokaler PC)
     runs-on: self-hosted
-    needs: image
-    if: github.event_name == 'push'
+    needs: [image, sonarqube]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: read
@@ -97,7 +97,7 @@ jobs:
       APP_IMAGE: ${{ needs.image.outputs.ref }}
     defaults:
       run:
-        shell: bash
+        shell: powershell
 
     steps:
       - name: Checkout
@@ -111,29 +111,64 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Getestetes Image laden
-        run: docker pull "$APP_IMAGE"
+        run: docker pull $env:APP_IMAGE
 
       - name: Stack aktualisieren
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.deploy.yml \
-            up -d --no-build --remove-orphans
+        run: docker compose -f docker-compose.yml -f docker-compose.deploy.yml up -d --no-build --remove-orphans
 
       - name: Smoke-Test
         run: |
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8081/actuator/health > /dev/null; then
-              echo "Deployment erfolgreich: $APP_IMAGE"
-              exit 0
-            fi
-            echo "Warte auf die Anwendung... ($i/30)"
-            sleep 5
-          done
-          echo "Anwendung war nach 150 Sekunden nicht erreichbar."
-          docker compose -f docker-compose.yml -f docker-compose.deploy.yml \
-            logs --tail 120 app
-          exit 1
+          $ok = $false
+          for ($i = 1; $i -le 30; $i++) {
+            try {
+              $r = Invoke-WebRequest -Uri "http://localhost:8081/actuator/health" -UseBasicParsing -TimeoutSec 5
+              if ($r.StatusCode -eq 200) { $ok = $true; break }
+            } catch { }
+            Write-Host "Warte auf die Anwendung... ($i/30)"
+            Start-Sleep -Seconds 5
+          }
+          if (-not $ok) {
+            docker compose -f docker-compose.yml -f docker-compose.deploy.yml logs --tail 120 app
+            throw "Anwendung war nach 150 Sekunden nicht erreichbar."
+          }
+          Write-Host "Deployment erfolgreich: $env:APP_IMAGE"
 
       - name: Laufende Container
         if: always()
         run: |
           docker compose -f docker-compose.yml -f docker-compose.deploy.yml ps
+
+      - name: Alte Images aufraeumen (lokal, letzte 5 behalten)
+        run: |
+          $imageRepo = $env:APP_IMAGE.Substring(0, $env:APP_IMAGE.LastIndexOf(':'))
+          $sorted = docker images $imageRepo -q | Select-Object -Unique | ForEach-Object {
+            [PSCustomObject]@{ Id = $_; Created = (docker inspect -f "{{.Created}}" $_) }
+          } | Sort-Object Created -Descending
+
+          $obsolete = $sorted | Select-Object -Skip 5 | Select-Object -ExpandProperty Id
+          if ($obsolete) {
+            docker rmi $obsolete -f
+            Write-Host "$($obsolete.Count) altes Image(s) entfernt."
+          } else {
+            Write-Host "Weniger als 5 Images vorhanden, nichts zu entfernen."
+          }
+
+  sonarqube:
+    name: Code Quality (SonarQube, lokal)
+    runs-on: self-hosted
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: JDK 21 einrichten
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "zulu"
+
+      - name: Build und SonarQube-Analyse
+        run: .\mvnw.cmd clean verify sonar:sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.token=$env:SONAR_TOKEN" "-Dsonar.projectKey=DevOps-Pipeline-Gruppe6" "-Dsonar.projectName=DevOps-Pipeline-Gruppe6" "-Dsonar.qualitygate.wait=true"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,0 +1,101 @@
+services:
+  # Reverse Proxy / Routing vor der Anwendung
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.file.filename=/etc/traefik/traefik-dynamic.yml"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ./traefik-dynamic.yml:/etc/traefik/traefik-dynamic.yml:ro
+    networks:
+      - devops-net
+
+  app:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "8080"
+    ports:
+      - "8081:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=expenses
+      - DB_USER=expenses
+      - DB_PASSWORD=expenses
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.services.app.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devops-net
+
+  # Grafische DB-Oberflaeche fuer Postgres
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+    networks:
+      - devops-net
+
+  # Persistenz des AusgabenTrackers
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=expenses
+      - POSTGRES_USER=expenses
+      - POSTGRES_PASSWORD=expenses
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expenses"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - devops-net
+
+  # Statische Codeanalyse
+  sonarqube:
+    image: sonarqube:community
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    networks:
+      - devops-net
+
+networks:
+  devops-net:
+
+volumes:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
+  postgres_data:

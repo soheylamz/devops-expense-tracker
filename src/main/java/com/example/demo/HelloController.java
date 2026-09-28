@@ -18,3 +18,4 @@ public class HelloController {
         System.out.println(wert.length());
     }
 }
+}
